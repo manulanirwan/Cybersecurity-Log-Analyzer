@@ -1,0 +1,4 @@
+Oct 08 10:00:01 server sshd[1234]: Failed password for root from 192.168.1.50 port 44210 ssh2
+Oct 08 10:00:03 server sshd[1234]: Failed password for root from 192.168.1.50 port 44212 ssh2
+Oct 08 10:00:05 server sshd[1234]: Failed password for root from 192.168.1.50 port 44214 ssh2
+Oct 08 10:00:08 server sshd[1234]: Accepted password for root from 192.168.1.50 port 44218 ssh2
