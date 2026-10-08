@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Log Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        input[type="password"], textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .file-upload-btn:hover {
+            background-color: #475569;
+        }
+
+        .file-name {
+            margin-left: 12px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            height: 140px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        button.btn-primary {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background-color: #0f172a;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-critical { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
+        .badge-high { background-color: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid #f59e0b; }
+        .badge-medium { background-color: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6; }
+        .badge-low { background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
+
+        .result-section {
+            margin-top: 18px;
+        }
+
+        .result-section h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .result-section p, .result-section ul {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .result-section ul {
+            padding-left: 20px;
+        }
+
+        .btn-success {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background-color: var(--success);
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        #resultsArea {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🛡️ Cybersecurity Log Analyzer</h1>
+        <p>AI-Powered Threat Detection & Security Advisory Report Generator</p>
+    </header>
+
+    <div class="card">
+        <div class="form-group">
+            <label for="apiKey">OpenAI API Key</label>
+            <input type="password" id="apiKey" placeholder="sk-proj-..." />
+            <small style="color: var(--text-muted); font-size: 0.8rem;">Your key is used directly in your browser and never stored.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Upload Log File (.log, .txt) or Paste Below</label>
+            <label class="file-upload-btn">
+                📁 Choose Log File
+                <input type="file" id="logFile" accept=".log,.txt" onchange="handleFileUpload(event)">
+            </label>
+            <span class="file-name" id="fileName">No file selected</span>
+        </div>
+
+        <div class="form-group">
+            <textarea id="logText" placeholder="Oct 08 10:00:01 server sshd[1234]: Failed password for root from 192.168.1.50 port 44210 ssh2
+Oct 08 10:00:03 server sshd[1234]: Failed password for root from 192.168.1.50 port 44212 ssh2
+Oct 08 10:00:05 server sshd[1234]: Failed password for root from 192.168.1.50 port 44214 ssh2
+Oct 08 10:00:08 server sshd[1234]: Accepted password for root from 192.168.1.50 port 44218 ssh2"></textarea>
+        </div>
+
+        <button class="btn-primary" id="analyzeBtn" onclick="analyzeLogs()">🔍 Analyze Threat Logs</button>
+        <div class="spinner" id="spinner">⚡ Analyzing log patterns with AI...</div>
+    </div>
+
+    <div class="card" id="resultsArea">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title">Threat Status</div>
+                <div class="metric-value" id="threatDetectedVal">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Severity Level</div>
+                <div class="metric-value" id="severityVal">-</div>
+            </div>
+        </div>
+
+        <div class="result-section">
+            <h3>Primary Threat</h3>
+            <p id="primaryThreatVal"></p>
+        </div>
+
+        <div class="result-section">
+            <h3>MITRE ATT&CK Mapping</h3>
+            <p id="mitreVal"></p>
+        </div>
+
+        <div class="result-section">
+            <h3>Threat Summary</h3>
+            <p id="summaryVal"></p>
+        </div>
+
+        <div class="result-section">
+            <h3>Why it is Suspicious</h3>
+            <p id="suspicionVal"></p>
+        </div>
+
+        <div class="result-section">
+            <h3>Indicators of Compromise (IOCs)</h3>
+            <ul id="iocsList"></ul>
+        </div>
+
+        <div class="result-section">
+            <h3>Recommended Defensive Actions</h3>
+            <ul id="actionsList"></ul>
+        </div>
+
+        <button class="btn-success" onclick="generatePDF()">📄 Download Security Advisory PDF</button>
+    </div>
+</div>
+
+<script>
+    let analysisData = null;
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            document.getElementById('fileName').textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logText').value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+    }
+
+    async function analyzeLogs() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const logContent = document.getElementById('logText').value.trim();
+
+        if (!apiKey) {
+            alert("Please enter your OpenAI API key.");
+            return;
+        }
+
+        if (!logContent) {
+            alert("Please upload or paste log contents.");
+            return;
+        }
+
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const spinner = document.getElementById('spinner');
+        const resultsArea = document.getElementById('resultsArea');
+
+        analyzeBtn.disabled = true;
+        spinner.style.display = 'block';
+        resultsArea.style.display = 'none';
+
+        const prompt = `You are a Senior Cybersecurity Incident Response Analyst. 
+Analyze the following log snippet and identify potential security threats, anomalies, or suspicious activities.
+
+Log Snippet:
+\`\`\`
+${logContent}
+\`\`\`
+
+Provide your assessment strictly in JSON format with the following keys:
+- "threat_detected": boolean
+- "primary_threat": string (e.g., "Possible SSH Brute-Force Attack")
+- "severity": string ("Low", "Medium", "High", "Critical")
+- "mitre_attack_id": string (e.g., "T1110 - Brute Force")
+- "summary": string (Brief narrative of what happened)
+- "suspicion_reason": string (Why this behavior indicates malicious intent)
+- "indicators_of_compromise": list of strings (IPs, usernames, timestamps)
+- "recommended_actions": list of strings (Actionable defensive steps)
+
+Return raw JSON only. Do not wrap in markdown syntax.`;
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.1
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "Failed to communicate with OpenAI API");
+            }
+
+            const data = await response.json();
+            let rawContent = data.choices[0].message.content.trim();
+
+            if (rawContent.startsWith("```json")) {
+                rawContent = rawContent.substring(7, rawContent.length - 3).trim();
+            } else if (rawContent.startsWith("```")) {
+                rawContent = rawContent.substring(3, rawContent.length - 3).trim();
+            }
+
+            analysisData = JSON.parse(rawContent);
+
+            // Display Results
+            document.getElementById('threatDetectedVal').textContent = analysisData.threat_detected ? "🚨 Threat Detected" : "✅ Normal";
+            
+            const sevElem = document.getElementById('severityVal');
+            const sev = analysisData.severity || "Low";
+            sevElem.innerHTML = `<span class="badge badge-${sev.toLowerCase()}">${sev}</span>`;
+
+            document.getElementById('primaryThreatVal').textContent = analysisData.primary_threat || "N/A";
+            document.getElementById('mitreVal').textContent = analysisData.mitre_attack_id || "N/A";
+            document.getElementById('summaryVal').textContent = analysisData.summary || "N/A";
+            document.getElementById('suspicionVal').textContent = analysisData.suspicion_reason || "N/A";
+
+            const iocsList = document.getElementById('iocsList');
+            iocsList.innerHTML = '';
+            (analysisData.indicators_of_compromise || []).forEach(ioc => {
+                const li = document.createElement('li');
+                li.textContent = ioc;
+                iocsList.appendChild(li);
+            });
+
+            const actionsList = document.getElementById('actionsList');
+            actionsList.innerHTML = '';
+            (analysisData.recommended_actions || []).forEach(act => {
+                const li = document.createElement('li');
+                li.textContent = act;
+                actionsList.appendChild(li);
+            });
+
+            resultsArea.style.display = 'block';
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            analyzeBtn.disabled = false;
+            spinner.style.display = 'none';
+        }
+    }
+
+    function generatePDF() {
+        if (!analysisData) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(30, 41, 59);
+        doc.text("Cybersecurity Threat Analysis Advisory", 14, 20);
+
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(2, 132, 199);
+        doc.line(14, 24, 196, 24);
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        
+        let y = 34;
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("Primary Threat:", 14, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(analysisData.primary_threat || "N/A"), 55, y);
+        y += 8;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Severity Level:", 14, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(analysisData.severity || "N/A"), 55, y);
+        y += 8;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("MITRE ATT&CK:", 14, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(analysisData.mitre_attack_id || "N/A"), 55, y);
+        y += 12;
+
+        function addPdfSection(title, textOrArray) {
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.setTextColor(2, 132, 199);
+            doc.text(title, 14, y);
+            y += 6;
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(51, 65, 85);
+
+            if (Array.isArray(textOrArray)) {
+                textOrArray.forEach(item => {
+                    const lines = doc.splitTextToSize("• " + item, 175);
+                    doc.text(lines, 14, y);
+                    y += (lines.length * 5);
+                });
+            } else {
+                const lines = doc.splitTextToSize(String(textOrArray), 175);
+                doc.text(lines, 14, y);
+                y += (lines.length * 5);
+            }
+            y += 6;
+        }
+
+        addPdfSection("1. Threat Summary", analysisData.summary || "N/A");
+        addPdfSection("2. Why This is Suspicious", analysisData.suspicion_reason || "N/A");
+        addPdfSection("3. Indicators of Compromise (IOCs)", analysisData.indicators_of_compromise || []);
+        addPdfSection("4. Recommended Defensive Actions", analysisData.recommended_actions || []);
+
+        doc.save("security_analysis_report.pdf");
+    }
+</script>
+
+</body>
+</html>
